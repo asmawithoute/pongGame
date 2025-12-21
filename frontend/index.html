@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>PONG</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <!-- Game Mode Selection Menu -->
+        <div id="game-menu" class="menu-container">
+            <h1>PONG GAME</h1>
+            <div class="button-container">
+                <button id="btn-1v1" class="menu-button">1 vs 1</button>
+                <button id="btn-4player" class="menu-button">2 vs 2</button>
+                <button id="btn-local" class="menu-button">local game</button>
+            </div>
+            <p id="status-text">Select a game mode</p>
+        </div>
+
+        <canvas id="board" style="display: none;"></canvas>
+        <script type="module">
+        const btn1v1 = document.getElementById("btn-1v1");
+        const btn4player = document.getElementById("btn-4player");
+        const btnLocal = document.getElementById("btn-local");
+        const menu = document.getElementById("game-menu");
+
+        btn1v1?.addEventListener("click", () => {
+            loadScript("../remoteGame.ts");
+        });
+
+        btn4player?.addEventListener("click", () => {
+            loadScript("../remoteGame.ts");
+        });
+
+        btnLocal?.addEventListener("click", () => {
+            menu.classList.add("hidden");
+            loadScript("../game.ts");
+        });
+
+
+        function loadScript(src) {
+            const script = document.createElement("script");
+            script.type = "module";
+            script.src = src;
+            document.body.appendChild(script);
+        }
+        </script>
+    </body>
+</html> 
