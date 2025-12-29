@@ -20,7 +20,7 @@ body {
     background: rgba(21, 21, 43, 0.95);
     padding: 50px;
     border-radius: 20px;
-    box-shadow: 0 0 30px rgba(255, 59, 148, 0.3);
+    /* box-shadow: 0 0 30px rgba(255, 59, 148, 0.3); */
 }
 
 .menu-container h1 {
@@ -28,7 +28,7 @@ body {
     font-size: 48px;
     margin-bottom: 40px;
     font-family: Arial, sans-serif;
-    text-shadow: 0 0 20px #9e58ee;
+    /* text-shadow: 0 0 20px #9e58ee; */
 }
 
 .button-container {
@@ -55,7 +55,7 @@ body {
     background: linear-gradient(45deg, #16213e, #0f3460);
     border-color: #ff3b94;
     transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(255, 59, 148, 0.5);
+    /* box-shadow: 0 0 20px rgba(255, 59, 148, 0.5); */
 }
 
 .menu-button:active {
