@@ -9,7 +9,7 @@ const boardWidth: number = 900;
 const boardHeight: number = 450;
 let contex : CanvasRenderingContext2D | null = null;
 
-let gameMode: '1v1' | '4player' | 'local' | null = null;
+let gameMode: '1v1' | 'vAI' | 'local' | null = null;
 
 const paddleWidth: number = 15; 
 const paddleHeight: number = 80;
@@ -95,6 +95,34 @@ function drawWaitingForPlayer(
     context.shadowBlur = 0;
 }
 
+
+function connectAiServer() {
+    const serverUrl = `http://localhost:3004`;
+
+    socket = io(serverUrl);
+
+    socket?.emit("hello");
+        
+    socket?.emit("findGame");
+    socket.on("gameStart", (data: { roomID: string, role: string }) => {        
+        gameState.roomID = data.roomID;
+        gameState.role = data.role;
+        gameState.inGame = true; 
+        startGameLoop();
+    });
+
+    socket.on("gameUpdate", (data: any) => {
+        gameState.ballX = data.ballX;
+        gameState.ballY = data.ballY;
+        gameState.player1_Y = data.player1_Y;
+        gameState.player2_Y = data.player2_Y;
+        gameState.score1 = data.score1;
+        gameState.score2 = data.score2;
+        gameState.gameEnd = data.gameEnd;
+        gameState.winner = data.winner;
+    });
+}
+
 function connectServer() {
     const serverHost = import.meta.env.VITE_SERVER_HOST;
     const serverUrl = `http://${serverHost}:3001`;
@@ -125,10 +153,6 @@ function connectServer() {
         gameState.gameEnd = data.gameEnd;
         gameState.winner = data.winner;
     });
-   
-    socket.on("disconnect", () => {
-        console.log("DISCONNECTED! socket Id ::", socket?.id);
-    });
 }
 
 (function initGame() {
@@ -142,7 +166,7 @@ function connectServer() {
     document.addEventListener("keyup", handleKeyUp);
     const btn1v1 = document.getElementById("btn-1v1");
     const btnlocal = document.getElementById("btn-local");
-    const btn4Player = document.getElementById("btn-4player");
+    const btnvAI = document.getElementById("btn-vAI");
     const menu = document.getElementById("game-menu");
     const statusText = document.getElementById("status-text");
 
@@ -153,18 +177,13 @@ function connectServer() {
         menu?.classList.add("hidden");
         if (board) board.style.display = "block";
     });
-
-    btnlocal?.addEventListener("click", () => {
-        gameMode = 'local';
-        if (statusText) statusText.textContent = "Local mode coming soon!";
+    btnvAI?.addEventListener("click", () => {
+        gameMode = 'vAI';
+        // if (statusText) statusText.textContent = "Connecting to 1v1 match...";
+        connectAiServer();
+        menu?.classList.add("hidden");
+        if (board) board.style.display = "block";
     });
-
-    btn4Player?.addEventListener("click", () => {
-        gameMode = '4player';
-        if (statusText) statusText.textContent = "4-player mode coming soon!";
-
-    });
-
 })();
 
 function handleKeyDown(event: KeyboardEvent) {
