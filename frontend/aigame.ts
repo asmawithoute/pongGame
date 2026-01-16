@@ -17,6 +17,28 @@ let aigameGO : boolean = false;
 let aiwinner : string | null = null;
 const aimaxScore : number = 3;
 
+// WebSocket connection to backend AI server
+import { io } from "socket.io-client";
+const aiSocket = io("http://localhost:3004");
+
+// AI prediction state
+let currentAIAction: "up" | "down" | "stay" = "stay";
+let lastPredictionTime = 0;
+const predictionInterval = 30; 
+
+aiSocket.on("connect", () => {
+    console.log(" Connected to AI Game Server");
+});
+
+aiSocket.on("disconnect", () => {
+    console.log(" Disconnected from AI Game Server");
+});
+
+aiSocket.on("aiAction", (prediction: { action: "up" | "down" | "stay" }) => {
+    currentAIAction = prediction.action;
+});
+
+
 
 
 let aiplayer = {
@@ -131,19 +153,41 @@ function aimovePlayer()//this will move the ai aipaddle
 {
     if(aigameStart)
     {
-        
-        if(aiball.x <= aiboardWidth / 4 && aiball.y <= aiboardHeight /2 && aiplayer.y > 0 )
+    
+        const currentTime = Date.now();
+        if (currentTime - lastPredictionTime > predictionInterval) {
+            requestAIPrediction();
+            lastPredictionTime = currentTime;
+        }
+
+        if(currentAIAction === "up" && aiplayer.y > 0) {
             aiplayer.y -= aiplayer.step * aipaddleSpeed;
-        else if(aiball.x <= aiboardWidth / 4 && aiball.y >= aiboardHeight /2 && aiplayer.y < aiboardHeight - aipaddleHeight)
+        } else if(currentAIAction === "down" && aiplayer.y < aiboardHeight - aipaddleHeight) {
             aiplayer.y += aiplayer.step * aipaddleSpeed;
+        }
         
         if(aikeys['ArrowUp'] && realplayer.y > 0)
             realplayer.y -= realplayer.step * aipaddleSpeed;
         else if(aikeys['ArrowDown'] && realplayer.y < aiboardHeight - aipaddleHeight)
             realplayer.y +=  realplayer.step * aipaddleSpeed;
-
-        //hna 5asni nzid l moves dyal ai player
     }
+}
+
+function requestAIPrediction() {
+    // Send current game state to backend for AI prediction
+    const gameState = {
+        ball_x: aiball.x,
+        ball_y: aiball.y,
+        ball_step_x: aiball.stepX,
+        ball_step_y: aiball.stepY,
+        paddle_y: aiplayer.y,
+        paddle_height: aipaddleHeight,
+        board_width: aiboardWidth,
+        board_height: aiboardHeight,
+        opponent_y: realplayer.y
+    };
+    
+    aiSocket.emit("requestPrediction", gameState);
 }
 
 function aimoveBall()

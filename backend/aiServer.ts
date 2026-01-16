@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 import { Server as SocketIOServer } from "socket.io";
+import { io as ioClient } from "socket.io-client";
 
 const gameStates = new Map<string, {
     ballX: number,
@@ -43,12 +44,45 @@ const gameSocket = new SocketIOServer(server.server, {
     }
 });
 
+// Connection to Python AI prediction server
+const pythonAIClient = ioClient("http://localhost:5000", {
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5
+});
+
+pythonAIClient.on("connect", () => {
+    console.log(" Connected to Python AI prediction server");
+});
+
+pythonAIClient.on("disconnect", () => {
+    console.log(" Disconnected from Python AI prediction server");
+});
+
+pythonAIClient.on("connected", (data) => {
+    console.log(" Python server says:", data);
+});
+
 
 gameSocket.on("connection", (socket) => {  
+    console.log("Frontend client connected:", socket.id);
+
     socket.on("hello", () => {
         console.log("!!!!!!!! Received from front");
     
         // socket.send("reply", "Hello from server!");
+    });
+
+    // Handle AI prediction requests from frontend
+    socket.on("requestPrediction", (gameState) => {
+        // Forward to Python AI server
+        pythonAIClient.emit("predict", gameState);
+        
+        // Wait for prediction from Python
+        pythonAIClient.once("prediction", (prediction) => {
+            // Send prediction back to frontend
+            socket.emit("aiAction", prediction);
+        });
     });
 });
 
@@ -142,5 +176,3 @@ function resetBall(state: any) {
     state.ballStepX = state.score1 > state.score2 ? 5 : -5;
     state.ballStepY = Math.random() < 0.5 ? -5 : 5;
 }
-
-console.log("🚀 Server running on http://localhost:3004");
